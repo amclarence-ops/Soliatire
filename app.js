@@ -83,7 +83,7 @@ class Solitaire {
     for (let i = 0; i < 7; i++) {
       for (let j = i; j < 7; j++) {
         const card = this.deck.pop();
-        if (i === j) card.faceUp = true;
+        card.faceUp = (i === j); // Flips top card of each column face-up
         this.tableau[j].push(card);
       }
     }
@@ -185,10 +185,8 @@ class Solitaire {
   checkAutoCompleteAvailable() {
     if (this.isAutoCompleting) return;
 
-    // Check stock & waste are clear or completely revealed
     if (this.stock.length > 0) return;
 
-    // Check no face-down cards remain in tableau
     const hasHiddenCards = this.tableau.some(col => col.some(card => !card.faceUp));
     
     const autoBtn = document.getElementById('autocomplete-btn');
@@ -208,7 +206,6 @@ class Solitaire {
     while (cardMoved) {
       cardMoved = false;
 
-      // Try moving from waste to foundation
       if (this.waste.length > 0) {
         const card = this.waste[this.waste.length - 1];
         for (let f = 0; f < 4; f++) {
@@ -221,7 +218,6 @@ class Solitaire {
         }
       }
 
-      // Try moving from tableau columns to foundation
       if (!cardMoved) {
         for (let col = 0; col < 7; col++) {
           const colPile = this.tableau[col];
@@ -262,7 +258,6 @@ class Solitaire {
       const srcRect = sourceEl.getBoundingClientRect();
       const destRect = foundationEl.getBoundingClientRect();
 
-      // Clone card for smooth transition overlay
       const clone = sourceEl.cloneNode(true);
       clone.classList.add('animating');
       clone.style.position = 'fixed';
@@ -273,7 +268,6 @@ class Solitaire {
       document.body.appendChild(clone);
       sourceEl.style.opacity = '0';
 
-      // Trigger transformation to foundation target position
       requestAnimationFrame(() => {
         clone.style.left = `${destRect.left}px`;
         clone.style.top = `${destRect.top}px`;
