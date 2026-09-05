@@ -10,15 +10,54 @@ class Solitaire {
     this.tableau = [[], [], [], [], [], [], []];
     this.draggedData = null;
 
+    // Timer variables
+    this.timerSeconds = 0;
+    this.timerInterval = null;
+
     this.init();
   }
 
   init() {
+    this.resetState();
     this.buildDeck();
     this.shuffle();
     this.deal();
     this.bindEvents();
+    this.startTimer();
     this.render();
+  }
+
+  resetState() {
+    this.stopTimer();
+    this.timerSeconds = 0;
+    this.updateTimerDisplay();
+    this.deck = [];
+    this.stock = [];
+    this.waste = [];
+    this.foundations = [[], [], [], []];
+    this.tableau = [[], [], [], [], [], [], []];
+    document.getElementById('win-modal').classList.add('hidden');
+  }
+
+  startTimer() {
+    this.stopTimer();
+    this.timerInterval = setInterval(() => {
+      this.timerSeconds++;
+      this.updateTimerDisplay();
+    }, 1000);
+  }
+
+  stopTimer() {
+    if (this.timerInterval) {
+      clearInterval(this.timerInterval);
+      this.timerInterval = null;
+    }
+  }
+
+  updateTimerDisplay() {
+    const mins = String(Math.floor(this.timerSeconds / 60)).padStart(2, '0');
+    const secs = String(this.timerSeconds % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = `Time: ${mins}:${secs}`;
   }
 
   buildDeck() {
@@ -55,6 +94,7 @@ class Solitaire {
     this.renderWaste();
     this.renderFoundations();
     this.renderTableau();
+    this.checkWinCondition();
   }
 
   renderStock() {
@@ -97,7 +137,6 @@ class Solitaire {
       const pile = this.tableau[colIndex];
       pile.forEach((card, cardIndex) => {
         const cardEl = this.createCardElement(card, 'tableau', colIndex, cardIndex);
-        // Adjusted stack spacing to match larger 168px height cards
         cardEl.style.top = `${cardIndex * 34}px`;
         colEl.appendChild(cardEl);
       });
@@ -139,9 +178,14 @@ class Solitaire {
     return cardEl;
   }
 
-  // --- DRAG, DROP & GAMEPLAY LOGIC ---
+  // --- EVENTS & WIN CONDITION ---
   bindEvents() {
+    // Prevent duplicate event listener bindings on restart
+    if (this.eventsBound) return;
+
     document.getElementById('stock').addEventListener('click', () => this.drawStock());
+    document.getElementById('restart-btn').addEventListener('click', () => this.init());
+    document.getElementById('play-again-btn').addEventListener('click', () => this.init());
 
     document.body.addEventListener('dragstart', (e) => {
       const cardEl = e.target.closest('.card');
@@ -169,6 +213,16 @@ class Solitaire {
       this.handleDrop(dropTarget);
       this.draggedData = null;
     });
+
+    this.eventsBound = true;
+  }
+
+  checkWinCondition() {
+    const totalFoundationCards = this.foundations.reduce((sum, pile) => sum + pile.length, 0);
+    if (totalFoundationCards === 52) {
+      this.stopTimer();
+      document.getElementById('win-modal').classList.remove('hidden');
+    }
   }
 
   drawStock() {
