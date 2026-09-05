@@ -105,8 +105,8 @@ body {
 .face-art {
   border: 2px solid #333333;
   /* Reduced dimensions by 10% */
-  width: 90%;
-  height: 90%;
+  width: 80%;
+  height: 80%;
   /* Reduced font size by 10%: 52px -> 47px */
   font-size: 47px;
   font-weight: 900;
