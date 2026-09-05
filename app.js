@@ -49,7 +49,7 @@ class Solitaire {
     this.stock = this.deck;
   }
 
-  // --- RENDERING ENGINE ---
+  // --- RENDERING SYSTEM ---
   render() {
     this.renderStock();
     this.renderWaste();
@@ -97,7 +97,8 @@ class Solitaire {
       const pile = this.tableau[colIndex];
       pile.forEach((card, cardIndex) => {
         const cardEl = this.createCardElement(card, 'tableau', colIndex, cardIndex);
-        cardEl.style.top = `${cardIndex * 24}px`; // Vertical overlap
+        // Adjusted stack spacing to match larger 168px height cards
+        cardEl.style.top = `${cardIndex * 34}px`;
         colEl.appendChild(cardEl);
       });
     });
@@ -105,10 +106,30 @@ class Solitaire {
 
   createCardElement(card, sourcePile, pileIndex, cardIndex) {
     const cardEl = document.createElement('div');
-    cardEl.className = `card ${card.faceUp ? '' : 'card-back'} ${card.color}`;
-    if (card.faceUp) {
-      cardEl.textContent = `${card.value} ${card.suit}`;
+    
+    if (!card.faceUp) {
+      cardEl.className = 'card card-back';
+    } else {
+      cardEl.className = `card ${card.color}`;
       cardEl.draggable = true;
+
+      const isFaceCard = ['J', 'Q', 'K'].includes(card.value);
+
+      cardEl.innerHTML = `
+        <div class="card-corner top-left">
+          <span>${card.value}</span>
+          <span class="corner-suit">${card.suit}</span>
+        </div>
+        <div class="card-center">
+          ${isFaceCard 
+            ? `<div class="face-art">${card.value}</div>` 
+            : `<span>${card.suit}</span>`}
+        </div>
+        <div class="card-corner bottom-right">
+          <span>${card.value}</span>
+          <span class="corner-suit">${card.suit}</span>
+        </div>
+      `;
     }
 
     cardEl.dataset.source = sourcePile;
@@ -118,25 +139,24 @@ class Solitaire {
     return cardEl;
   }
 
-  // --- DRAG AND DROP & EVENT BINDING ---
+  // --- DRAG, DROP & GAMEPLAY LOGIC ---
   bindEvents() {
-    // Stock click logic
     document.getElementById('stock').addEventListener('click', () => this.drawStock());
 
-    // Event Delegation for Dragging
     document.body.addEventListener('dragstart', (e) => {
-      if (!e.target.classList.contains('card')) return;
-      
-      const source = e.target.dataset.source;
-      const pileIndex = parseInt(e.target.dataset.pileIndex);
-      const cardIndex = parseInt(e.target.dataset.cardIndex);
+      const cardEl = e.target.closest('.card');
+      if (!cardEl || cardEl.classList.contains('card-back')) return;
+
+      const source = cardEl.dataset.source;
+      const pileIndex = parseInt(cardEl.dataset.pileIndex);
+      const cardIndex = parseInt(cardEl.dataset.cardIndex);
 
       this.draggedData = { source, pileIndex, cardIndex };
-      e.dataTransfer.setData('text/plain', ''); // Firefox drag compatibility
+      e.dataTransfer.setData('text/plain', '');
     });
 
     document.body.addEventListener('dragover', (e) => {
-      e.preventDefault(); // Required to allow drop
+      e.preventDefault();
     });
 
     document.body.addEventListener('drop', (e) => {
@@ -157,7 +177,6 @@ class Solitaire {
       card.faceUp = true;
       this.waste.push(card);
     } else {
-      // Recycle waste back to stock
       while (this.waste.length > 0) {
         const card = this.waste.pop();
         card.faceUp = false;
@@ -167,12 +186,10 @@ class Solitaire {
     this.render();
   }
 
-  // --- RULE VALIDATION AND DROP HANDLING ---
   handleDrop(dropTarget) {
     const { source, pileIndex, cardIndex } = this.draggedData;
     let cardsToMove = [];
 
-    // Get cards moving array
     if (source === 'waste') {
       cardsToMove = [this.waste[this.waste.length - 1]];
     } else if (source === 'tableau') {
@@ -181,9 +198,9 @@ class Solitaire {
       cardsToMove = [this.foundations[pileIndex][this.foundations[pileIndex].length - 1]];
     }
 
+    if (!cardsToMove.length) return;
     const leadCard = cardsToMove[0];
 
-    // Case 1: Dropped on Foundation
     if (dropTarget.classList.contains('foundation')) {
       const targetFIndex = Array.from(document.querySelectorAll('.foundation')).indexOf(dropTarget);
       if (cardsToMove.length === 1 && this.isValidFoundationMove(leadCard, targetFIndex)) {
@@ -191,7 +208,6 @@ class Solitaire {
       }
     }
 
-    // Case 2: Dropped on Tableau Column
     if (dropTarget.classList.contains('column')) {
       const targetColIndex = parseInt(dropTarget.dataset.col);
       if (this.isValidTableauMove(leadCard, targetColIndex)) {
@@ -203,7 +219,7 @@ class Solitaire {
   isValidTableauMove(card, targetColIndex) {
     const targetPile = this.tableau[targetColIndex];
     if (targetPile.length === 0) {
-      return card.value === 'K'; // Kings only on empty columns
+      return card.value === 'K';
     }
     const topCard = targetPile[targetPile.length - 1];
     const isOppositeColor = card.color !== topCard.color;
@@ -215,7 +231,7 @@ class Solitaire {
   isValidFoundationMove(card, foundationIndex) {
     const targetPile = this.foundations[foundationIndex];
     if (targetPile.length === 0) {
-      return card.value === 'A'; // Aces first
+      return card.value === 'A';
     }
     const topCard = targetPile[targetPile.length - 1];
     const isSameSuit = card.suit === topCard.suit;
@@ -231,7 +247,6 @@ class Solitaire {
       movedCards = [this.waste.pop()];
     } else if (source === 'tableau') {
       movedCards = this.tableau[sourceIndex].splice(cardIndex);
-      // Flip new top card if face down
       if (this.tableau[sourceIndex].length > 0) {
         this.tableau[sourceIndex][this.tableau[sourceIndex].length - 1].faceUp = true;
       }
@@ -249,7 +264,6 @@ class Solitaire {
   }
 }
 
-// Initialize game on launch
 window.addEventListener('DOMContentLoaded', () => {
   new Solitaire();
 });
