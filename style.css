@@ -59,3 +59,14 @@ body {
   background-color: #2b5c8f;
   border: 2px solid white;
 }
+.column {
+  position: relative;
+}
+
+.red {
+  color: #d12d2d;
+}
+
+.black {
+  color: #111111;
+}
