@@ -10,9 +10,9 @@ class Solitaire {
     this.tableau = [[], [], [], [], [], [], []];
     this.draggedData = null;
 
-    // Timer variables
     this.timerSeconds = 0;
     this.timerInterval = null;
+    this.isAutoCompleting = false;
 
     this.init();
   }
@@ -30,6 +30,7 @@ class Solitaire {
   resetState() {
     this.stopTimer();
     this.timerSeconds = 0;
+    this.isAutoCompleting = false;
     this.updateTimerDisplay();
     this.deck = [];
     this.stock = [];
@@ -37,6 +38,7 @@ class Solitaire {
     this.foundations = [[], [], [], []];
     this.tableau = [[], [], [], [], [], [], []];
     document.getElementById('win-modal').classList.add('hidden');
+    document.getElementById('autocomplete-btn').classList.add('hidden');
   }
 
   startTimer() {
@@ -88,12 +90,13 @@ class Solitaire {
     this.stock = this.deck;
   }
 
-  // --- RENDERING SYSTEM ---
+  // --- RENDERING ENGINE ---
   render() {
     this.renderStock();
     this.renderWaste();
     this.renderFoundations();
     this.renderTableau();
+    this.checkAutoCompleteAvailable();
     this.checkWinCondition();
   }
 
@@ -150,7 +153,7 @@ class Solitaire {
       cardEl.className = 'card card-back';
     } else {
       cardEl.className = `card ${card.color}`;
-      cardEl.draggable = true;
+      cardEl.draggable = !this.isAutoCompleting;
 
       const isFaceCard = ['J', 'Q', 'K'].includes(card.value);
 
@@ -178,16 +181,122 @@ class Solitaire {
     return cardEl;
   }
 
+  // --- AUTO-COMPLETE ENGINE ---
+  checkAutoCompleteAvailable() {
+    if (this.isAutoCompleting) return;
+
+    // Check stock & waste are clear or completely revealed
+    if (this.stock.length > 0) return;
+
+    // Check no face-down cards remain in tableau
+    const hasHiddenCards = this.tableau.some(col => col.some(card => !card.faceUp));
+    
+    const autoBtn = document.getElementById('autocomplete-btn');
+    if (!hasHiddenCards) {
+      autoBtn.classList.remove('hidden');
+    } else {
+      autoBtn.classList.add('hidden');
+    }
+  }
+
+  async runAutoComplete() {
+    if (this.isAutoCompleting) return;
+    this.isAutoCompleting = true;
+    document.getElementById('autocomplete-btn').classList.add('hidden');
+
+    let cardMoved = true;
+    while (cardMoved) {
+      cardMoved = false;
+
+      // Try moving from waste to foundation
+      if (this.waste.length > 0) {
+        const card = this.waste[this.waste.length - 1];
+        for (let f = 0; f < 4; f++) {
+          if (this.isValidFoundationMove(card, f)) {
+            await this.animateMove('waste', 0, this.waste.length - 1, f);
+            this.executeMove('waste', 0, this.waste.length - 1, 'foundation', f);
+            cardMoved = true;
+            break;
+          }
+        }
+      }
+
+      // Try moving from tableau columns to foundation
+      if (!cardMoved) {
+        for (let col = 0; col < 7; col++) {
+          const colPile = this.tableau[col];
+          if (colPile.length > 0) {
+            const card = colPile[colPile.length - 1];
+            for (let f = 0; f < 4; f++) {
+              if (this.isValidFoundationMove(card, f)) {
+                await this.animateMove('tableau', col, colPile.length - 1, f);
+                this.executeMove('tableau', col, colPile.length - 1, 'foundation', f);
+                cardMoved = true;
+                break;
+              }
+            }
+          }
+          if (cardMoved) break;
+        }
+      }
+    }
+  }
+
+  animateMove(sourceType, sourceIndex, cardIndex, foundationIndex) {
+    return new Promise((resolve) => {
+      let sourceEl;
+      if (sourceType === 'waste') {
+        sourceEl = document.querySelector('#waste .card');
+      } else {
+        const colEl = document.querySelectorAll('.tableau .column')[sourceIndex];
+        sourceEl = colEl.children[cardIndex];
+      }
+
+      const foundationEl = document.querySelectorAll('.foundation')[foundationIndex];
+
+      if (!sourceEl || !foundationEl) {
+        resolve();
+        return;
+      }
+
+      const srcRect = sourceEl.getBoundingClientRect();
+      const destRect = foundationEl.getBoundingClientRect();
+
+      // Clone card for smooth transition overlay
+      const clone = sourceEl.cloneNode(true);
+      clone.classList.add('animating');
+      clone.style.position = 'fixed';
+      clone.style.left = `${srcRect.left}px`;
+      clone.style.top = `${srcRect.top}px`;
+      clone.style.margin = '0';
+
+      document.body.appendChild(clone);
+      sourceEl.style.opacity = '0';
+
+      // Trigger transformation to foundation target position
+      requestAnimationFrame(() => {
+        clone.style.left = `${destRect.left}px`;
+        clone.style.top = `${destRect.top}px`;
+      });
+
+      setTimeout(() => {
+        clone.remove();
+        resolve();
+      }, 250);
+    });
+  }
+
   // --- EVENTS & WIN CONDITION ---
   bindEvents() {
-    // Prevent duplicate event listener bindings on restart
     if (this.eventsBound) return;
 
     document.getElementById('stock').addEventListener('click', () => this.drawStock());
     document.getElementById('restart-btn').addEventListener('click', () => this.init());
     document.getElementById('play-again-btn').addEventListener('click', () => this.init());
+    document.getElementById('autocomplete-btn').addEventListener('click', () => this.runAutoComplete());
 
     document.body.addEventListener('dragstart', (e) => {
+      if (this.isAutoCompleting) return;
       const cardEl = e.target.closest('.card');
       if (!cardEl || cardEl.classList.contains('card-back')) return;
 
@@ -205,7 +314,7 @@ class Solitaire {
 
     document.body.addEventListener('drop', (e) => {
       e.preventDefault();
-      if (!this.draggedData) return;
+      if (!this.draggedData || this.isAutoCompleting) return;
 
       const dropTarget = e.target.closest('.pile');
       if (!dropTarget) return;
@@ -226,6 +335,7 @@ class Solitaire {
   }
 
   drawStock() {
+    if (this.isAutoCompleting) return;
     if (this.stock.length > 0) {
       const card = this.stock.pop();
       card.faceUp = true;
