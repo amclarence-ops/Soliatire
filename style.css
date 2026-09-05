@@ -22,7 +22,7 @@ body {
   gap: 16px;
   width: 95%;
   max-width: 1100px;
-  padding: 2px 20px 20px 20px; /* Reduced top padding from 5px to 2px */
+  padding: 5px 20px 20px 20px; /* Reduced top padding from 5px to 2px */
 }
 
 .top-row, .tableau {
