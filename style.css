@@ -1,0 +1,61 @@
+:root {
+  --bg-color: #0b6623;
+  --card-width: 80px;
+  --card-height: 112px;
+}
+
+body {
+  background-color: var(--bg-color);
+  margin: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  font-family: system-ui, -apple-system, sans-serif;
+}
+
+#game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  width: 90%;
+  max-width: 800px;
+}
+
+.top-row, .tableau {
+  display: flex;
+  justify-content: space-between;
+}
+
+.deck-area, .foundations {
+  display: flex;
+  gap: 12px;
+}
+
+.pile {
+  width: var(--card-width);
+  height: var(--card-height);
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  position: relative;
+}
+
+.card {
+  width: var(--card-width);
+  height: var(--card-height);
+  background-color: white;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  position: absolute;
+  user-select: none;
+}
+
+.card-back {
+  background-color: #2b5c8f;
+  border: 2px solid white;
+}
