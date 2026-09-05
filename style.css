@@ -245,6 +245,35 @@ body {
   padding: 10px 24px;
 }
 
+/* Animation Transition for Auto-Complete */
+.card.animating {
+  transition: all 0.25s ease-in-out;
+  z-index: 500 !important;
+}
+
+/* Auto-Complete Button Styling */
+#autocomplete-btn {
+  background-color: #ffd700;
+  color: #111111;
+  border: none;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  transition: background-color 0.2s, transform 0.1s, opacity 0.2s;
+}
+
+#autocomplete-btn:hover {
+  background-color: #ffca00;
+  transform: translateY(-1px);
+}
+
+#autocomplete-btn.hidden {
+  display: none;
+}
+
 #play-again-btn:hover {
   background-color: #084d1a;
 }
