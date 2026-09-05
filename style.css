@@ -17,12 +17,12 @@ body {
 }
 
 #game-board {
-  ddisplay: flex;
+  display: flex;
   flex-direction: column;
-  gap: 20px; /* Reduced from 32px to bring tableau closer to top row */
+  gap: 16px;
   width: 95%;
   max-width: 1100px;
-  padding: 10px 20px 20px 20px; /* Top padding reduced 50% from 20px to 10px */
+  padding: 5px 20px 20px 20px;
 }
 
 .top-row, .tableau {
