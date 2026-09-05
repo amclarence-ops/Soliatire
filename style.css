@@ -66,9 +66,10 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  /* Scaled up 50%: 16px -> 24px */
   font-size: 24px;
   font-weight: bold;
-  line-height: 0.85;
+  line-height: 0.9;
 }
 
 .top-left {
@@ -83,6 +84,7 @@ body {
 }
 
 .corner-suit {
+  /* Scaled up 50%: 14px -> 21px */
   font-size: 21px;
 }
 
