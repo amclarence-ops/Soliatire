@@ -3,13 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Solitaire</title>
+  <title>Neville's Solitaire</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div id="game-board">
-    <!-- Add title banner here -->
     <h1 class="game-title">Neville's Solitaire</h1>
+
+    <!-- Controls Bar -->
+    <div class="controls-bar">
+      <button id="restart-btn">Restart Game</button>
+      <div id="timer">Time: 00:00</div>
+    </div>
+
     <div class="top-row">
       <div class="deck-area">
         <div id="stock" class="pile card-back"></div>
@@ -32,6 +38,16 @@
       <div class="column pile" data-col="6"></div>
     </div>
   </div>
+
+  <!-- Victory Overlay Banner -->
+  <div id="win-modal" class="modal hidden">
+    <div class="modal-content">
+      <h2>🎉 Congratulations! 🎉</h2>
+      <p>You solved the puzzle!</p>
+      <button id="play-again-btn">Play Again?</button>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>
